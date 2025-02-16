@@ -16,21 +16,21 @@
 # SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 AWSTemplateFormatVersion: 2010-09-09
-Transform: AWS::Serverless-2016-10-31
+#Transform: AWS::Serverless-2016-10-31
 Description: Migration Workshop Source Environment
 Parameters:
   KeyName:
-    Description: Name of the EC2 KeyPair to enable SSH access to the instances
+    Description: Name of the EC2 KeyPair to enable SSH access to the instances.
     Type: String
     Default: linux_servers_ssh_key
   SourceVPCName:
     Description: The name of the Source VPC being created.
     Type: String
-    Default: SourceVPCName
+    Default: SourceVPC
   TargetVPCName:
     Description: The name of the Target VPC being created.
     Type: String
-    Default: TargetVPCName
+    Default: TargetVPC
   YourIPAddress:
     Description: The IP address range that can be used to SSH/ RDP to the EC2 instances. Please use https://checkip.amazonaws.com/ to know what is your public IP address.
     Type: String
@@ -259,7 +259,7 @@ Resources:
     Type: AWS::EC2::Instance
     DependsOn:
     - DBServer
-    - SSHKeyGeneratorExecution
+#    - SSHKeyGeneratorExecution
     Properties:
       InstanceType: t3.small
       SecurityGroupIds:
@@ -294,39 +294,39 @@ Resources:
       Tags:
       - Key: Name
         Value: Source-Webserver
-  WaveWebServer2:
-    Type: AWS::EC2::Instance
-    DependsOn:
-    - DBServer
-    - SSHKeyGeneratorExecution
-    Properties:
-      InstanceType: t3.small
-      SecurityGroupIds:
-      - Ref: WebServerSG
-      SubnetId:
-        Ref: SourceEnvSubnet
-      KeyName:
-        Ref: KeyName
-      ImageId: ami-0d1cd67c26f5fca19
-      BlockDeviceMappings:
-        - DeviceName: /dev/xvda
-          Ebs:
-            VolumeSize: 16
-            Encrypted: true
-        - DeviceName: /dev/sda1
-          Ebs:
-            VolumeSize: 8
-            Encrypted: true
-      Monitoring: true
-      IamInstanceProfile:
-        Ref: EC2InstanceProfile
-      Tags:
-      - Key: Name
-        Value: Source-WaveWebserver2
+#  WaveWebServer2:
+#    Type: AWS::EC2::Instance
+#    DependsOn:
+#    - DBServer
+#    - SSHKeyGeneratorExecution
+#    Properties:
+#      InstanceType: t3.small
+#      SecurityGroupIds:
+#      - Ref: WebServerSG
+#      SubnetId:
+#        Ref: SourceEnvSubnet
+#      KeyName:
+#        Ref: KeyName
+#      ImageId: ami-0d1cd67c26f5fca19
+#      BlockDeviceMappings:
+#        - DeviceName: /dev/xvda
+#          Ebs:
+#            VolumeSize: 16
+#            Encrypted: true
+#        - DeviceName: /dev/sda1
+#          Ebs:
+#            VolumeSize: 8
+#            Encrypted: true
+#      Monitoring: true
+#      IamInstanceProfile:
+#        Ref: EC2InstanceProfile
+#      Tags:
+#      - Key: Name
+#        Value: Source-WaveWebserver2
   DBServer:
     Type: AWS::EC2::Instance
-    DependsOn:
-    - SSHKeyGeneratorExecution
+#    DependsOn:
+#    - SSHKeyGeneratorExecution
     Properties:
       InstanceType: t3.micro
       SecurityGroupIds:
@@ -375,114 +375,114 @@ Resources:
       - arn:aws:iam::aws:policy/service-role/AWSElasticDisasterRecoveryEc2InstancePolicy
       - arn:aws:iam::aws:policy/CloudWatchAgentServerPolicy
       - arn:aws:iam::aws:policy/AWSApplicationMigrationSSMAccess
-  SSHKeyGenerator:
-    Type: AWS::Serverless::Function
-    Properties:
-      Timeout: 60
-      Runtime: python3.8
-      Handler: generate_ssh_key.lambda_handler
-      Role:
-        Fn::GetAtt:
-        - SSHKeyGeneratorRole
-        - Arn
-      CodeUri:
-        Bucket: !Select [ 0 , !Split [ "." , !Select [ 2 , !Split [ "/" , !Ref S3BucketHttps ] ] ] ]
-        Key: !Join [ "", [ !Select [ 3 , !Split [ "/" , !Ref S3BucketHttps ] ] , /lambda/8a116868f7d42fd6d751332d02a4326e ] ]
-  SSHKeyGeneratorExecution:
-    Type: Custom::SSHKeyGenerator
-    DependsOn:
-    - SSHKeyGenerator
-    Properties:
-      ServiceToken:
-        Fn::GetAtt:
-        - SSHKeyGenerator
-        - Arn
-  SSHKeyGeneratorRole:
-    Type: AWS::IAM::Role
-    Properties:
-      Path: /
-      AssumeRolePolicyDocument:
-        Version: 2012-10-17
-        Statement:
-        - Effect: Allow
-          Principal:
-            Service:
-            - lambda.amazonaws.com
-          Action:
-          - sts:AssumeRole
-      Policies:
-      - PolicyName: root
-        PolicyDocument:
-          Version: 2012-10-17
-          Statement:
-          - Effect: Allow
-            Action:
-            - logs:CreateLogGroup
-            - logs:CreateLogStream
-            - logs:PutLogEvents
-            - ssm:GetParameter
-            - ssm:DeleteParameter
-            - ssm:PutParameter
-            - ec2:CreateKeyPair
-            - ec2:DeleteKeyPair
-            Resource: '*'
+#  SSHKeyGenerator:
+#    Type: AWS::Serverless::Function
+#    Properties:
+#      Timeout: 60
+#      Runtime: python3.8
+#      Handler: generate_ssh_key.lambda_handler
+#      Role:
+#        Fn::GetAtt:
+#        - SSHKeyGeneratorRole
+#        - Arn
+#      CodeUri:
+#        Bucket: !Select [ 0 , !Split [ "." , !Select [ 2 , !Split [ "/" , !Ref S3BucketHttps ] ] ] ]
+#        Key: !Join [ "", [ !Select [ 3 , !Split [ "/" , !Ref S3BucketHttps ] ] , /lambda/8a116868f7d42fd6d751332d02a4326e ] ]
+#  SSHKeyGeneratorExecution:
+#    Type: Custom::SSHKeyGenerator
+#    DependsOn:
+#    - SSHKeyGenerator
+#    Properties:
+#      ServiceToken:
+#        Fn::GetAtt:
+#        - SSHKeyGenerator
+#        - Arn
+#  SSHKeyGeneratorRole:
+#    Type: AWS::IAM::Role
+#    Properties:
+#      Path: /
+#      AssumeRolePolicyDocument:
+#        Version: 2012-10-17
+#        Statement:
+#        - Effect: Allow
+#          Principal:
+#            Service:
+#            - lambda.amazonaws.com
+#          Action:
+#          - sts:AssumeRole
+#      Policies:
+#      - PolicyName: root
+#        PolicyDocument:
+#          Version: 2012-10-17
+#          Statement:
+#          - Effect: Allow
+#            Action:
+#            - logs:CreateLogGroup
+#            - logs:CreateLogStream
+#            - logs:PutLogEvents
+#            - ssm:GetParameter
+#            - ssm:DeleteParameter
+#            - ssm:PutParameter
+#            - ec2:CreateKeyPair
+#            - ec2:DeleteKeyPair
+#            Resource: '*'
   EC2InstanceProfile:
     Type: AWS::IAM::InstanceProfile
     Properties:
       Path: /
       Roles:
       - Ref: EC2InstanceRole
-  ApiGw:
-    Type: AWS::Serverless::Api
-    Properties:
-      StageName: prod
-  GetSSMParamFunction:
-    Type: AWS::Serverless::Function
-    Properties:
-      Timeout: 60
-      Runtime: python3.8
-      Handler: index.lambda_handler
-      Role:
-        Fn::GetAtt:
-        - GetSSMParamFunctionRole
-        - Arn
-      CodeUri:
-        Bucket: !Select [ 0 , !Split [ "." , !Select [ 2 , !Split [ "/" , !Ref S3BucketHttps ] ] ] ]
-        Key: !Join [ "", [ !Select [ 3 , !Split [ "/" , !Ref S3BucketHttps ] ] , /lambda/47997b93d8ea743adbd2cbef43361b3e ] ]
-      Events:
-        SSMReturningApi:
-          Type: Api
-          Properties:
-            Path: /get_ssm_param
-            Method: GET
-            RestApiId:
-              Ref: ApiGw
-  GetSSMParamFunctionRole:
-    Type: AWS::IAM::Role
-    Properties:
-      Path: /
-      AssumeRolePolicyDocument:
-        Version: 2012-10-17
-        Statement:
-        - Effect: Allow
-          Principal:
-            Service:
-            - lambda.amazonaws.com
-          Action:
-          - sts:AssumeRole
-      Policies:
-      - PolicyName: root
-        PolicyDocument:
-          Version: 2012-10-17
-          Statement:
-          - Effect: Allow
-            Action:
-            - logs:CreateLogGroup
-            - logs:CreateLogStream
-            - logs:PutLogEvents
-            - 'ssm:'
-            - ssm:GetParameter
-            Resource: '*'
+#  ApiGw:
+#    Type: AWS::Serverless::Api
+#    Properties:
+#      StageName: prod
+#  GetSSMParamFunction:
+#    Type: AWS::Serverless::Function
+#    Properties:
+#      Timeout: 60
+#      Runtime: python3.8
+#      Handler: index.lambda_handler
+#      Role:
+#        Fn::GetAtt:
+#        - GetSSMParamFunctionRole
+#        - Arn
+#      CodeUri:
+#        Bucket: !Select [ 0 , !Split [ "." , !Select [ 2 , !Split [ "/" , !Ref S3BucketHttps ] ] ] ]
+#        Key: !Join [ "", [ !Select [ 3 , !Split [ "/" , !Ref S3BucketHttps ] ] , /lambda/47997b93d8ea743adbd2cbef43361b3e ] ]
+#      Events:
+#        SSMReturningApi:
+#          Type: Api
+#          Properties:
+#            Path: /get_ssm_param
+#            Method: GET
+#            RestApiId:
+#              Ref: ApiGw
+#  GetSSMParamFunctionRole:
+#    Type: AWS::IAM::Role
+#    Properties:
+#      Path: /
+#      AssumeRolePolicyDocument:
+#        Version: 2012-10-17
+#        Statement:
+#        - Effect: Allow
+#          Principal:
+#            Service:
+#            - lambda.amazonaws.com
+#          Action:
+#          - sts:AssumeRole
+#      Policies:
+#      - PolicyName: root
+#        PolicyDocument:
+#          Version: 2012-10-17
+#          Statement:
+#          - Effect: Allow
+#            Action:
+#            - logs:CreateLogGroup
+#            - logs:CreateLogStream
+#            - logs:PutLogEvents
+#            - 'ssm:'
+#            - ssm:GetParameter
+#            Resource: '*'
   TargetVPC:
     Type: AWS::EC2::VPC
     Properties:
@@ -943,64 +943,64 @@ Resources:
         Ref: PrivateSubnet11
       RouteTableId:
         Ref: PrivateRouteTable1
-  MigrationUsers:
-    Type: AWS::IAM::Group
-    Properties:
-      ManagedPolicyArns:
-        - arn:aws:iam::aws:policy/AWSApplicationMigrationAgentPolicy
-      Policies:
-        - PolicyName: MigrationPolicy
-          PolicyDocument:
-            Version: '2012-10-17'
-            Statement:
-            - Effect: Allow
-              Action:
-              - ec2:*
-              - elasticloadbalancing:*
-              - cloudwatch:*
-              - autoscaling:*
-              - iam:GetUser
-              - iam:PassRole
-              - iam:ListRoles
-              - iam:GetRole
-              - iam:ListInstanceProfiles
-              - iam:ListAttachedRolePolicies
-              - kms:*
-              - mgh:*
-              - s3:*
-              - arsenal:RegisterOnPremisesAgent
-              - discovery:*
-              Resource: '*'
-  ADSUser:
-    Type: AWS::IAM::User
-    DependsOn:
-      - MigrationUsers
-    Properties:
-         UserName: ADS_User
-         Path: /
-         Groups:
-              - !Ref MigrationUsers
-  ADSAccessKeys:
-    Type: AWS::IAM::AccessKey
-    DependsOn:
-      - ADSUser
-    Properties:
-         UserName: ADS_User
-  CloudEndureUser:
-    Type: AWS::IAM::User
-    DependsOn:
-      - MigrationUsers
-    Properties:
-      UserName: CloudEndureUser
-      Path: /
-      Groups:
-        - !Ref MigrationUsers
-  MigrationAccessKeys:
-    Type: AWS::IAM::AccessKey
-    DependsOn:
-    - CloudEndureUser
-    Properties:
-      UserName: CloudEndureUser
+#  MigrationUsers:
+#    Type: AWS::IAM::Group
+#    Properties:
+#      ManagedPolicyArns:
+#        - arn:aws:iam::aws:policy/AWSApplicationMigrationAgentPolicy
+#      Policies:
+#        - PolicyName: MigrationPolicy
+#          PolicyDocument:
+#            Version: '2012-10-17'
+#            Statement:
+#            - Effect: Allow
+#              Action:
+#              - ec2:*
+#              - elasticloadbalancing:*
+#              - cloudwatch:*
+#              - autoscaling:*
+#              - iam:GetUser
+#              - iam:PassRole
+#              - iam:ListRoles
+#              - iam:GetRole
+#              - iam:ListInstanceProfiles
+#              - iam:ListAttachedRolePolicies
+#              - kms:*
+#              - mgh:*
+#              - s3:*
+#              - arsenal:RegisterOnPremisesAgent
+#              - discovery:*
+#              Resource: '*'
+#  ADSUser:
+#    Type: AWS::IAM::User
+#    DependsOn:
+#      - MigrationUsers
+#    Properties:
+#         UserName: ADS_User
+#         Path: /
+#         Groups:
+#              - !Ref MigrationUsers
+#  ADSAccessKeys:
+#    Type: AWS::IAM::AccessKey
+#    DependsOn:
+#      - ADSUser
+#    Properties:
+#         UserName: ADS_User
+#  CloudEndureUser:
+#    Type: AWS::IAM::User
+#    DependsOn:
+#      - MigrationUsers
+#    Properties:
+#      UserName: CloudEndureUser
+#      Path: /
+#      Groups:
+#        - !Ref MigrationUsers
+#  MigrationAccessKeys:
+#    Type: AWS::IAM::AccessKey
+#    DependsOn:
+#    - CloudEndureUser
+#    Properties:
+#      UserName: CloudEndureUser
   ecsTaskExecutionRole:
     Type: AWS::IAM::Role
     Properties:
@@ -1063,21 +1063,21 @@ Resources:
           - sts:AssumeRole
       ManagedPolicyArns:
       - arn:aws:iam::aws:policy/service-role/AmazonEC2ContainerServiceAutoscaleRole
-  AppMigServiceAgentUser:
-    Type: AWS::IAM::User
-    DependsOn:
-      - MigrationUsers
-    Properties:
-      Groups:
-        - !Ref MigrationUsers
-      UserName: AppMigServiceAgentUser
-      Path: /
-  AppMigServiceAccessKeys:
-    Type: AWS::IAM::AccessKey
-    DependsOn:
-    - AppMigServiceAgentUser
-    Properties:
-      UserName: AppMigServiceAgentUser  
+#  AppMigServiceAgentUser:
+#    Type: AWS::IAM::User
+#    DependsOn:
+#      - MigrationUsers
+#    Properties:
+#      Groups:
+#        - !Ref MigrationUsers
+#      UserName: AppMigServiceAgentUser
+#      Path: /
+#  AppMigServiceAccessKeys:
+#    Type: AWS::IAM::AccessKey
+#    DependsOn:
+#    - AppMigServiceAgentUser
+#    Properties:
+#      UserName: AppMigServiceAgentUser  
 Outputs:
   WebServerUsername:
     Description: Username for webserver
@@ -1097,10 +1097,10 @@ Outputs:
       Fn::GetAtt:
       - DBServer
       - PublicDnsName
-  SSHKeyURL:
-    Description: URL to get the SSH Key
-    Value:
-      Fn::Sub: https://${ApiGw}.execute-api.${AWS::Region}.amazonaws.com/prod/get_ssm_param
+#  SSHKeyURL:
+#    Description: URL to get the SSH Key
+#    Value:
+#      Fn::Sub: https://${ApiGw}.execute-api.${AWS::Region}.amazonaws.com/prod/get_ssm_param
 #  CloudEndureUserAccessKey:
 #    Description: CloudEndure Migration IAM User Access Key
 #    Value:
@@ -1111,24 +1111,24 @@ Outputs:
 #      Fn::GetAtt:
 #      - MigrationAccessKeys
 #      - SecretAccessKey
-
-  ADSServiceAccessKey:
-    Description: Application Discovery Service IAM User Access Key ID
-    Value:
-      Ref: ADSAccessKeys
-  ADSServiceSecretKey:
-    Description: Application Discovery Service IAM User Secret Key ID
-    Value:
-      Fn::GetAtt:
-        - ADSAccessKeys
-        - SecretAccessKey
-  AppMigServiceAccessKey:
-    Description: Application Migration Service IAM User Access Key ID
-    Value:
-      Ref: AppMigServiceAccessKeys
-  AppMigServiceSecretAccessKey:
-    Description: Application Migration Service IAM User Secret Access Key
-    Value:
-      Fn::GetAtt:
-        - AppMigServiceAccessKeys
-        - SecretAccessKey
+#
+#  ADSServiceAccessKey:
+#    Description: Application Discovery Service IAM User Access Key ID
+#    Value:
+#      Ref: ADSAccessKeys
+#  ADSServiceSecretKey:
+#    Description: Application Discovery Service IAM User Secret Key ID
+#    Value:
+#      Fn::GetAtt:
+#        - ADSAccessKeys
+#        - SecretAccessKey
+#  AppMigServiceAccessKey:
+#    Description: Application Migration Service IAM User Access Key ID
+#    Value:
+#      Ref: AppMigServiceAccessKeys
+#  AppMigServiceSecretAccessKey:
+#    Description: Application Migration Service IAM User Secret Access Key
+#    Value:
+#      Fn::GetAtt:
+#        - AppMigServiceAccessKeys
+#        - SecretAccessKey
